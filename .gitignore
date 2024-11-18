@@ -1,5 +1,6 @@
 node_modules/
 dist/
+3d-assets/*
 3d-assets/barrel/barrel.glb
 3d-assets/gundy/license.txt
 3d-assets/gundy/scene.bin
@@ -34,3 +35,4 @@ dist/
 puma-shoe/puma-tennari.jpg
 puma-shoe/puma-tennari.mtl
 puma-shoe/puma-tennari.obj
+puma-shoe/*
