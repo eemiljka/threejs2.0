@@ -9,11 +9,24 @@ let container, camera, scene, renderer, controls;
 
 let controller1, controller2;
 let controllerGrip1, controllerGrip2;
+
 let raycaster;
+
 const intersected = [];
 const tempMatrix = new THREE.Matrix4();
+
 let group = new THREE.Group();
 group.name = "Interaction-Group";
+
+// initialize marker for teleport and referencespace of headset
+// initialize the INTERSECTION array for teleport
+let marker, baseReferenceSpace;
+let INTERSECTION;
+
+// create a new empty group to include imported models you want
+// to teleport with
+let teleportgroup = new THREE.Group();
+teleportgroup.name = "Teleport-Group";
 
 init();
 
@@ -21,6 +34,8 @@ function init() {
   // Scene and Camera Setup
   scene = new THREE.Scene();
   scene.add(group);
+  // add the empty group to the scene
+  scene.add(teleportgroup);
   camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -57,7 +72,11 @@ function init() {
   controls.screenSpacePanning = false;
   controls.minDistance = 1;
   controls.maxDistance = 100;
-
+  marker = new THREE.Mesh(
+    new THREE.CircleGeometry(0.25, 32).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x808080 })
+  );
+  scene.add(marker);
   loadmodels();
   initVR();
 }
@@ -66,16 +85,29 @@ function initVR() {
   document.body.appendChild(VRButton.createButton(renderer));
   renderer.xr.enabled = true;
 
+  renderer.xr.addEventListener(
+    "sessionstart",
+    () => (baseReferenceSpace = renderer.xr.getReferenceSpace())
+  );
+
   // controllers
 
   controller1 = renderer.xr.getController(0);
   controller1.addEventListener("selectstart", onSelectStart);
   controller1.addEventListener("selectend", onSelectEnd);
+
+  controller1.addEventListener("squeezestart", onSqueezeStart);
+  controller1.addEventListener("squeezeend", onSqueezeEnd);
+
   scene.add(controller1);
 
   controller2 = renderer.xr.getController(1);
   controller2.addEventListener("selectstart", onSelectStart);
   controller2.addEventListener("selectend", onSelectEnd);
+
+  controller2.addEventListener("squeezestart", onSqueezeStart);
+  controller2.addEventListener("squeezeend", onSqueezeEnd);
+
   scene.add(controller2);
 
   const controllerModelFactory = new XRControllerModelFactory();
@@ -114,6 +146,28 @@ function initVR() {
   controller2.add(line.clone());
 
   raycaster = new THREE.Raycaster();
+}
+
+function onSqueezeStart() {
+  this.userData.isSqueezing = true;
+  console.log("Controller squeeze started");
+}
+function onSqueezeEnd() {
+  this.userData.isSqueezing = false;
+  console.log("squeezeend");
+  if (INTERSECTION) {
+    const offsetPosition = {
+      x: -INTERSECTION.x,
+      y: -INTERSECTION.y,
+      z: -INTERSECTION.z,
+      w: 1,
+    };
+    const offsetRotation = new THREE.Quaternion();
+    const transform = new XRRigidTransform(offsetPosition, offsetRotation);
+    const teleportSpaceOffset =
+      baseReferenceSpace.getOffsetReferenceSpace(transform);
+    renderer.xr.setReferenceSpace(teleportSpaceOffset);
+  }
 }
 
 function onSelectStart(event) {
@@ -212,8 +266,8 @@ function loadmodels() {
       console.log("HDR texture loaded");
 
       // model
-      const loader = new GLTFLoader().setPath("otter-world/");
-      loader.load("otter-world.glb", async function (gltf) {
+      const loader = new GLTFLoader().setPath("nolandscape/");
+      loader.load("nolandscape.glb", async function (gltf) {
         const model = gltf.scene;
 
         console.log("GLTF model loaded");
@@ -226,6 +280,22 @@ function loadmodels() {
 
         console.log("Model added to scene");
       });
+
+      // model2
+      const loader2 = new GLTFLoader().setPath("world-only-land/");
+      loader2.load("world-only-land.glb", async function (gltf) {
+        const model = gltf.scene;
+
+        console.log("GLTF model loaded");
+
+        // wait until the model can be added to the scene without blocking due to shader compilation
+        await renderer.compileAsync(model, camera, scene);
+
+        model.position.set(0, 0, 0); // Adjust position if necessary
+        teleportgroup.add(model);
+
+        console.log("Model added to scene");
+      });
     });
 }
 
@@ -234,8 +304,37 @@ renderer.setAnimationLoop(function () {
   cleanIntersected();
   intersectObjects(controller1);
   intersectObjects(controller2);
+  moveMarker();
+
   renderer.render(scene, camera);
 });
+
+function moveMarker() {
+  INTERSECTION = undefined;
+  if (controller1.userData.isSqueezing === true) {
+    tempMatrix.identity().extractRotation(controller1.matrixWorld);
+    raycaster.ray.origin.setFromMatrixPosition(controller1.matrixWorld);
+    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+    //const intersects = raycaster.intersectObjects([floor]);
+    const intersects = raycaster.intersectObjects(teleportgroup.children, true);
+    if (intersects.length > 0) {
+      INTERSECTION = intersects[0].point;
+      console.log(intersects[0]);
+      console.log(INTERSECTION);
+    }
+  } else if (controller2.userData.isSqueezing === true) {
+    tempMatrix.identity().extractRotation(controller2.matrixWorld);
+    raycaster.ray.origin.setFromMatrixPosition(controller2.matrixWorld);
+    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+    // const intersects = raycaster.intersectObjects([floor]);
+    const intersects = raycaster.intersectObjects(teleportgroup.children, true);
+    if (intersects.length > 0) {
+      INTERSECTION = intersects[0].point;
+    }
+  }
+  if (INTERSECTION) marker.position.copy(INTERSECTION);
+  marker.visible = INTERSECTION !== undefined;
+}
 
 window.addEventListener("resize", resize, false);
 
