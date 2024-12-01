@@ -4,5 +4,5 @@ export default {
   server: {
     port: 5174,
   },
-  base: "/~eemiljka/otter-world/",
+  base: "/~eemiljka/interactions/",
 };
