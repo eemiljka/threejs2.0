@@ -1,13 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<title>My first three.js app</title>
-		<style>
-			body { margin: 0; }
-		</style>
-	</head>
-	<body>
-		<script type="module" src="./js/main-ready.js"></script>
-	</body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3D Model Viewer</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <script src="script.js" defer></script>
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+  <script type="module" src="./js/main-ready.js"></script>
+</head>
+<body class="is-preload">
+  <section id="header" class="dark">
+    <header>
+      <h3>Welcome! Explore my modelviewer and threejs models</h3>
+    </header>
+    <footer>
+    </footer>
+  </section>
+
+  <!-- MODEL VIEWER SECTION -->
+  <section id="modelviewer" class="main">
+    <header>
+      <div class="container">
+        <p>Interact with the 3D models below.</p>
+      </div>
+    </header>
+    <div id="viewer-container">
+      <!-- PUMA 3D MODEL -->
+      <model-viewer 
+        src="puma.gltf" 
+        ar 
+        ar-modes="webxr scene-viewer quick-look" 
+        camera-controls 
+        tone-mapping="neutral" 
+        poster="poster.webp" 
+        shadow-intensity="1">
+        <button class="Hotspot" slot="hotspot-1" 
+          data-position="-6.3662483182923095m 3.7176784862025314m 0.1728966890867969m" 
+          data-normal="-0.3695190557129763m 0.9244215842720509m 0.09434194187603905m" 
+          data-visibility-attribute="visible">
+          <div class="HotspotAnnotation">Front of the shoe</div>
+        </button>
+        <button class="Hotspot" slot="hotspot-2" 
+          data-position="1.429427279452291m 6.470839531874663m -0.20760106331524053m" 
+          data-normal="-0.12256618186029969m 0.6325673228235351m -0.7647457833555237m" 
+          data-visibility-attribute="visible">
+          <div class="HotspotAnnotation">Shoe laces</div>
+        </button>
+        <button class="Hotspot" slot="hotspot-4" 
+          data-position="9.242822903247463m 4.487966861666372m 0.5354943569143216m" 
+          data-normal="0.9486716402514788m 0.06431048898038315m 0.3096550984396563m" 
+          data-visibility-attribute="visible">
+          <div class="HotspotAnnotation">Logo</div>
+        </button>
+        <div class="progress-bar hide" slot="progress-bar">
+          <div class="update-bar"></div>
+        </div>
+        <button slot="ar-button" id="ar-button">
+          View in your space
+        </button>
+        <div id="ar-prompt">
+          <img src="ar_hand_prompt.png">
+        </div>
+      </model-viewer>
+
+      <!-- VARIANT -->
+      <model-viewer id="shoe" 
+        camera-controls 
+        touch-action="pan-y" 
+        src="../../shared-assets/models/glTF-Sample-Assets/Models/MaterialsVariantsShoe/glTF-Binary/MaterialsVariantsShoe.glb" 
+        ar 
+        alt="A 3D model of a Shoe">
+        <div class="controls">
+          <div>Variant: <select id="variant"></select></div>
+        </div>
+      </model-viewer>
+    </div>
+  </section>
+
+  <!-- VARIANT DROPDOWN SELECTION -->
+  <script>
+    const modelViewerVariants = document.querySelector("model-viewer");
+    const select = document.querySelector('#variant');
+
+    modelViewerVariants.addEventListener('load', () => {
+      const names = modelViewerVariants.availableVariants;
+      for (const name of names) {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      }
+      // Adds a default option.
+      const option = document.createElement('option');
+      option.value = 'default';
+      option.textContent = 'Default';
+      select.appendChild(option);
+    });
+
+    select.addEventListener('input', (event) => {
+      modelViewerVariants.variantName = event.target.value === 'default' ? null : event.target.value;
+    });
+  </script>
+</body>
 </html>

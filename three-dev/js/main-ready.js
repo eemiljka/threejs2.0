@@ -78,8 +78,73 @@ function init() {
   );
   scene.add(marker);
   loadmodels();
+  //  initSecondScene();
   initVR();
 }
+
+/*function initSecondScene() {
+  const secondContainer = document.createElement("div");
+  secondContainer.style.width = "50%";
+  secondContainer.style.height = "50%";
+  secondContainer.style.position = "absolute";
+  secondContainer.style.top = "10px";
+  secondContainer.style.right = "10px";
+  secondContainer.style.border = "1px solid black";
+  document.body.appendChild(secondContainer);
+
+  const secondScene = new THREE.Scene();
+  const secondCamera = new THREE.PerspectiveCamera(
+    75,
+    secondContainer.clientWidth / secondContainer.clientHeight,
+    0.1,
+    1000
+  );
+  secondCamera.position.set(3, 3, 3);
+  secondCamera.lookAt(new THREE.Vector3(0, 0, 0));
+
+  const secondRenderer = new THREE.WebGLRenderer({ antialias: true });
+  secondRenderer.setSize(
+    secondContainer.clientWidth,
+    secondContainer.clientHeight
+  );
+  secondContainer.appendChild(secondRenderer.domElement);
+
+  const secondControls = new OrbitControls(
+    secondCamera,
+    secondRenderer.domElement
+  );
+  secondControls.enableDamping = true;
+  secondControls.dampingFactor = 0.05;
+  secondControls.minDistance = 1;
+  secondControls.maxDistance = 100;
+
+  const axesHelper = new THREE.AxesHelper(5);
+  secondScene.add(axesHelper);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+  directionalLight.position.set(5, 5, 5);
+  secondScene.add(directionalLight);
+
+  const ambientLight = new THREE.AmbientLight(0x404040);
+  secondScene.add(ambientLight);
+
+  const loader = new GLTFLoader().setPath("barrel/");
+  loader.load("barrel.glb", function (gltf) {
+    const secondModel = gltf.scene;
+    secondModel.scale.set(1, 1, 1);
+    secondModel.position.set(0, 0, 0);
+    secondScene.add(secondModel);
+  });
+
+  function animateSecondScene() {
+    requestAnimationFrame(animateSecondScene);
+
+    secondControls.update();
+
+    secondRenderer.render(secondScene, secondCamera);
+  }
+  animateSecondScene();
+}*/
 
 function initVR() {
   document.body.appendChild(VRButton.createButton(renderer));

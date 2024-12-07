@@ -4,5 +4,5 @@ export default {
   server: {
     port: 5174,
   },
-  base: "/~eemiljka/interactions/",
+  base: "/~eemiljka/model-viewer/",
 };
